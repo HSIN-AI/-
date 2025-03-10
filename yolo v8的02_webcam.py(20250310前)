@@ -1,0 +1,27 @@
+import cv2
+from ultralytics import YOLO
+
+# 載入 YOLO 模型
+model = YOLO('models/V2.pt')
+
+# 使用手機的視頻流網址
+video_url = 'http://192.168.31.142:4747/video'  # 替換為你的網址
+cap = cv2.VideoCapture(video_url)
+
+while cap.isOpened():
+    success, frame = cap.read()
+
+    if success:
+        results = model(frame)
+
+        annotated_frame = results[0].plot()
+
+        cv2.imshow("YOLOv8 Inference", annotated_frame)
+
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+    else:
+        print("無法獲取視頻流")
+
+cap.release()
+cv2.destroyAllWindows()
