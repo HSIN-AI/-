@@ -1,0 +1,55 @@
+import cv2
+from ultralytics import YOLO
+
+# ✅ 載入 YOLOv8 模型（請確認 V2.pt 是否存在）
+model = YOLO('models/V2.pt')
+
+# ✅ 設定 RTSP 影像串流網址
+rtsp_url = "rtsp://3B117161:3B117161@192.168.31.50:554/stream1"
+
+# ✅ 嘗試連接 RTSP 影像串流
+cap = cv2.VideoCapture(rtsp_url)
+
+if not cap.isOpened():
+    print("❌ 無法連接到 RTSP 影像串流，請檢查 URL、網路或攝影機設定。")
+    exit()
+
+while True:
+    success, frame = cap.read()
+
+    if not success:
+        print("❌ 無法獲取 RTSP 影像串流")
+        break
+
+    # ✅ 使用 YOLOv8 進行物件偵測
+    results = model(frame)
+
+    # ✅ 計算不同類別的物件數量
+    object_counts = {}  # 建立計數字典
+
+    for result in results:
+        for box in result.boxes:
+            cls_id = int(box.cls[0])  # 取得類別 ID
+            class_name = model.names[cls_id]  # 取得類別名稱
+            object_counts[class_name] = object_counts.get(class_name, 0) + 1  # 計數
+
+    # ✅ 使用 YOLOv8 內建的繪製函式來畫出 Bounding Box
+    annotated_frame = results[0].plot()
+
+    # ✅ 顯示計數結果
+    y_offset = 30  # 文字的垂直間距
+    for obj, count in object_counts.items():
+        cv2.putText(annotated_frame, f"{obj}: {count}", (10, y_offset),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+        y_offset += 30  # 調整下一行文字的位置
+
+    # ✅ 顯示偵測結果
+    cv2.imshow("YOLOv8 RTSP Object Counting", annotated_frame)
+
+    # ✅ 按 'q' 退出
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+
+# ✅ 釋放攝影機與關閉視窗
+cap.release()
+cv2.destroyAllWindows()
