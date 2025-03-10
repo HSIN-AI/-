@@ -1,0 +1,31 @@
+import cv2
+
+# 設定 RTSP 連結
+rtsp_url = "rtsp://3B117161:3B117161@192.168.31.50:554/stream1"
+
+# 開啟 RTSP 影像串流
+cap = cv2.VideoCapture(rtsp_url)
+
+if not cap.isOpened():
+    print("無法連接到 RTSP 影像串流，請檢查 URL、網路或攝影機設定。")
+    exit()
+
+while True:
+    ret, frame = cap.read()
+
+    if not ret:
+        print("無法接收影像（可能串流已斷開）。")
+        break
+
+    # 顯示影像
+    cv2.imshow("RTSP Stream", frame)
+
+    # 按 'q' 退出
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# 釋放資源
+cap.release()
+cv2.destroyAllWindows()
+
+
